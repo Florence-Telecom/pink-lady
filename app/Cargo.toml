@@ -3,6 +3,9 @@ name = "pink-lady"
 version = "0.1.0"
 edition = "2021"
 authors = ["Antoine Charbonneau <antoine@florencetelecom.com>"]
+[[bin]]
+name = "pink-lady"
+path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

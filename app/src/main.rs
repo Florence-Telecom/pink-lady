@@ -9,10 +9,11 @@ use hyper::{
 use prometheus_client::{encoding::text::encode, registry::Registry};
 use std::{
     future::Future,
-    io,
     net::SocketAddr,
     pin::Pin,
     sync::{Arc, RwLock},
+    fs::File,
+    io::{self, Write},
 };
 use tokio::signal::unix::{signal, SignalKind};
 
@@ -21,12 +22,17 @@ async fn main() {
     let env_file = cli::Args::get_params().env_file;
     dotenv::from_path(env_file).expect("Couldn't load .env file from -e parameter value.");
     env_logger::init();
-    log::debug!("Process ID: {}", std::process::id());
+
+    std::fs::create_dir_all("/run/pink-lady/").unwrap();
+
+    let pid = std::process::id();
+    log::debug!("Process ID: {}", pid);
+    let name: String = std::env::var("PL_NAME").unwrap();
+    let mut fh = File::create(format!("/run/pink-lady/{}.pid", name)).expect("Couldn't create PID file.");
+    let _ = fh.write(format!("{}\n", pid).as_bytes());
 
     let registry = scripts::get_registry();
-
     let metrics_addr = cli::Args::get_params().get_bind();
-
     let registry = Arc::new(RwLock::new(registry));
     let reload_registry = registry.clone();
 

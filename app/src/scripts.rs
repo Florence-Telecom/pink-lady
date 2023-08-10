@@ -7,7 +7,7 @@ use prometheus_client::{
 use std::{env, fs, path::PathBuf, process::Command};
 
 pub fn get_registry() -> Registry {
-    let mut registry = Registry::with_prefix(env::var("PL_PREFIX").unwrap());
+    let mut registry = Registry::with_prefix(env::var("PL_NAME").unwrap());
 
     let folder =
         env::var("PL_SCRIPT_FOLDER").expect("PL_SCRIPT_FOLDER environment variable doesn't exist");
@@ -108,6 +108,7 @@ impl EncodeMetric for ScraperScript {
 
         if command_result.is_err() {
             log::warn!("Failed to run script {}", &self.script);
+
             return encoder.encode_counter::<(), _, f64>(&self.failure_value, None);
         }
 
@@ -130,13 +131,16 @@ impl EncodeMetric for ScraperScript {
             log::warn!("{} has returned a non-empty stderr.", &self.script);
         }
 
-        let stdout = String::from_utf8(command_output.stdout)
-            .unwrap()
-            .trim()
+        let binding = String::from_utf8(command_output.stdout)
+            .unwrap();
+        let output = binding.trim()
+            .split('\n')
+            .filter(|x| !x.starts_with('#'))
+            .next()
             .to_owned();
 
-        let measured_int = stdout.parse::<u64>();
-        let measured_float = stdout.parse::<f64>();
+        let measured_int = output.unwrap().parse::<u64>();
+        let measured_float = output.unwrap().parse::<f64>();
 
         if measured_int.is_err() && measured_float.is_err() {
             log::error!(

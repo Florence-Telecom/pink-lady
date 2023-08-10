@@ -1,0 +1,11 @@
+[Unit]
+Description=Pink Lady simple Prometheus metrics server for %I
+After=network.target
+
+[Service]
+PIDFile=/var/run/pink-lady/%i.pid
+ExecStart=/usr/sbin/pink-lady -e /opt/monitoring/%i.env
+ExecReload=/usr/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
