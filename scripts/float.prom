@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#label=floating_value
+#description=Test de valeur flottante
+#type=gauge
+#null=-1
+
+echo 0.1

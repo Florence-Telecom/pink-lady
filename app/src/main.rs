@@ -86,22 +86,33 @@ pub fn make_handler(
     registry: Arc<RwLock<Registry>>,
 ) -> impl Fn(Request<Body>) -> Pin<Box<dyn Future<Output = io::Result<Response<Body>>> + Send>> {
     // This closure accepts a request and responds with the OpenMetrics encoding of our metrics.
-    move |_req: Request<Body>| {
-        let reg = registry.clone();
-        Box::pin(async move {
-            let mut buf = String::new();
-            encode(&mut buf, &reg.read().unwrap())
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-                .map(|_| {
-                    let body = Body::from(buf);
+    move |req: Request<Body>| {
+        if req.uri() == "/metrics" {
+            let reg = registry.clone();
+            Box::pin(async move {
+                let mut buf = String::new();
+                encode(&mut buf, &reg.read().unwrap())
+                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                    .map(|_| {
+                        let body = Body::from(buf);
+                        Response::builder()
+                            .header(
+                                hyper::header::CONTENT_TYPE,
+                                "application/openmetrics-text; version=1.0.0; charset=utf-8",
+                                )
+                            .body(body)
+                            .unwrap()
+                    })
+            })
+        } else {
+            Box::pin(async {
+                Ok(
                     Response::builder()
-                        .header(
-                            hyper::header::CONTENT_TYPE,
-                            "application/openmetrics-text; version=1.0.0; charset=utf-8",
-                        )
-                        .body(body)
-                        .unwrap()
-                })
-        })
+                    .status(hyper::http::StatusCode::NOT_FOUND)
+                    .body(())
+                    .unwrap()
+                  )
+            })
+        }
     }
 }

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+#label=one
+#description=Cette valeur est d'un
+#type=gauge
+
+echo 1

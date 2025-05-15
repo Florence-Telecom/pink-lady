@@ -1,0 +1,7 @@
+#!/bin/bash
+
+#label=time
+#description=Cette valeur compte les secondes unix
+#type=counter
+
+date +%s
